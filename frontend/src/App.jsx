@@ -54,12 +54,12 @@ function App() {
     <div className="App">
       <div style={{display: 'flex', justifyContent: 'space-between', alignItems: 'center'}}>
         <h1>BuaChat (Login sebagai: {auth.username})</h1>
-        <button onClick={() => auth.logout()} style={{height: 'fit-content'}}>Logout</button>
+        <button onClick={() => auth.logout()} className="logout">Logout</button>
       </div>
 
       <form onSubmit={handleSubmit} className="guestbook-form">
         <textarea
-          placeholder="Ketik BuaChat kamu di sini..."
+          placeholder="Ketik BuaChat-an kamu di sini..."
           value={message}
           onChange={(e) => setMessage(e.target.value)}
           required

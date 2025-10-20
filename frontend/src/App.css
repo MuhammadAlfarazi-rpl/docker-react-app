@@ -62,7 +62,7 @@ h2 {
   font-size: 16px;
   font-weight: bold;
   padding: 14px 20px;
-  background-color: #a924d1; 
+  background-color: #ab25d3; 
   color: #121212; 
   border: none;
   border-radius: 8px;
@@ -71,7 +71,7 @@ h2 {
 }
 
 .guestbook-form button:hover {
-  background-color: #a06bf9;
+  background-color: #cb4bf3;
 }
 
 .guestbook-form button:active {
@@ -88,6 +88,10 @@ h2 {
   border-radius: 8px;
   cursor: pointer;
   transition: background-color 0.2s, transform 0.1s;
+}
+
+.logout:hover {
+  background-color: #961e1e;
 }
 
 .messages-list {
