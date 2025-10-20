@@ -1,8 +1,7 @@
 import { useState, useEffect } from 'react';
 import axios from 'axios';
+import './App.css'; 
 
-// PENTING: URL API menunjuk ke port backend (3001)
-// Saat dijalankan di browser, 'localhost' akan merujuk ke mesin host kamu
 const API_URL = 'http://localhost:3001';
 
 function App() {
@@ -10,7 +9,6 @@ function App() {
   const [name, setName] = useState('');
   const [message, setMessage] = useState('');
 
-  // Fungsi untuk mengambil data dari backend
   const fetchMessages = async () => {
     try {
       const response = await axios.get(`${API_URL}/messages`);
@@ -20,28 +18,31 @@ function App() {
     }
   };
 
-  // Ambil data saat komponen pertama kali di-load
   useEffect(() => {
     fetchMessages();
   }, []);
 
-  // Fungsi untuk submit form
   const handleSubmit = async (e) => {
     e.preventDefault();
+    if (!name.trim() || !message.trim()) {
+      alert("Nama dan Pesan tidak boleh kosong!");
+      return;
+    }
     try {
       await axios.post(`${API_URL}/messages`, { name, message });
       setName('');
       setMessage('');
-      fetchMessages(); // Ambil ulang data setelah submit
+      fetchMessages(); 
     } catch (error) {
       console.error('Error posting message:', error);
     }
   };
 
   return (
-    <div style={{ maxWidth: '500px', margin: '0 auto', padding: '20px' }}>
-      <h1>Guestbook Sederhana</h1>
-      <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+    <div className="App">
+      <h1>Guestbook Saja</h1>
+      
+      <form onSubmit={handleSubmit} className="guestbook-form">
         <input
           type="text"
           placeholder="Nama Anda"
@@ -55,15 +56,16 @@ function App() {
           onChange={(e) => setMessage(e.target.value)}
           required
         ></textarea>
-        <button type="submit">Kirim</button>
+        <button type="submit">Kirim Pesan 🚀</button>
       </form>
 
-      <hr style={{ margin: '20px 0' }} />
+      <hr />
 
       <h2>Pesan:</h2>
-      <div style={{ display: 'flex', flexDirection: 'column', gap: '15px' }}>
+
+      <div className="messages-list">
         {messages.map((msg) => (
-          <div key={msg.id} style={{ border: '1px solid #ccc', padding: '10px', borderRadius: '5px' }}>
+          <div key={msg.id} className="message-item">
             <strong>{msg.name}</strong>
             <p>{msg.message}</p>
             <small>{new Date(msg.createdat).toLocaleString()}</small>

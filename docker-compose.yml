@@ -1,25 +1,28 @@
-version: '3.8' # Versi syntax Docker Compose
+version: '3.8' 
 
 services:
-  # Service untuk Frontend (Vite)
+  # Frontend 
   frontend:
-    build: ./frontend # Path ke folder frontend (yang ada Dockerfile)
+    build: ./frontend
     ports:
-      - "5173:5173" # Map port 5173 di host ke 5173 di container
+      - "5173:5173"
     volumes:
-      - ./frontend/src:/usr/src/app/src # Sinkronkan folder src untuk hot-reloading
+      # Map semua file 
+      - ./frontend/src:/usr/src/app/src
+      - ./frontend/public:/usr/src/app/public
+      - ./frontend/vite.config.js:/usr/src/app/vite.config.js
+      - ./frontend/index.html:/usr/src/app/index.html
     depends_on:
-      - backend # Pastikan backend jalan dulu sebelum frontend
+      - backend 
 
-  # Service untuk Backend (Node.js)
+  # Backend (Node.js)
   backend:
-    build: ./backend # Path ke folder backend
+    build: ./backend 
     ports:
       - "3001:3001" # Map port 3001 di host ke 3001 di container
     volumes:
-      - ./backend:/usr/src/app # Sinkronkan folder backend untuk hot-reloading
+      - ./backend:/usr/src/app 
     environment:
-      # Variabel ini akan dibaca oleh Node.js (process.env)
       - DB_USER=myuser
       - DB_HOST=db # PENTING: 'db' adalah nama service database di bawah
       - DB_NAME=mydb
@@ -28,22 +31,18 @@ services:
     depends_on:
       - db # Pastikan database jalan dulu sebelum backend
 
-  # Service untuk Database (PostgreSQL)
+  # Database (PostgreSQL)
   db:
-    image: postgres:14-alpine # Gunakan image resmi Postgres
+    image: postgres:14-alpine
     environment:
-      # Variabel ini akan dibaca oleh Postgres untuk inisialisasi
       - POSTGRES_USER=myuser
       - POSTGRES_PASSWORD=mypassword
       - POSTGRES_DB=mydb
     ports:
-      - "5432:5432" # (Opsional) Buka port DB ke host untuk debugging
+      - "5432:5432" # (Opsional) 
     volumes:
-      # Volume untuk menyimpan data DB agar tidak hilang saat container mati
       - postgres-data:/var/lib/postgresql/data
-      # Menjalankan skrip init.sql saat container pertama kali dibuat
       - ./init.sql:/docker-entrypoint-initdb.d/init.sql
 
-# Mendefinisikan volume yang digunakan di atas
 volumes:
   postgres-data:
