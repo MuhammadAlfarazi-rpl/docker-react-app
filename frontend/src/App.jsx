@@ -115,12 +115,12 @@ function App() {
 
         <form onSubmit={handleSubmit} className="guestbook-form">
           <textarea
-            placeholder="Ketik BuaChat kamu di sini..."
+            placeholder="Ketik BuaChat-an kamu di sini..."
             value={message}
             onChange={handleTyping}
             required
           ></textarea>
-          <button type="submit">Kirim Pesan 🚀</button>
+         <button type="submit" title="Kirim Pesan">🚀</button>
         </form>
       </div>
 
@@ -135,6 +135,14 @@ function App() {
             </li>
           ))}
         </ul>
+        <div className="typing-indicator">
+          {otherTypingUsers.length > 0 && (
+            <i>
+              {otherTypingUsers.join(', ')} 
+              {otherTypingUsers.length === 1 ? ' lagi ngetik...' : ' lagi ngetik...'}
+            </i>
+          )}
+        </div>
         <button onClick={() => auth.logout()} className="logout">Logout</button>
       </div>
 

@@ -40,7 +40,7 @@ function LoginPage() {
     <div className="login-container"> 
       <h1>{isRegistering ? 'Register BuaChat' : 'Login BuaChat'}</h1>
       
-      <form onSubmit={handleSubmit} className="guestbook-form">
+      <form onSubmit={handleSubmit} className="auth-form">
         <input
           type="text"
           placeholder="Username"
@@ -58,7 +58,7 @@ function LoginPage() {
         <button typeS="submit">{isRegistering ? 'Register' : 'Login'}</button>
         {error && <p style={{ color: 'red', textAlign: 'center' }}>{error}</p>}
       </form>
-      
+
       <button 
         onClick={() => setIsRegistering(!isRegistering)}
         className="toggle-auth" 

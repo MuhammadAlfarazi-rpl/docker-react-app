@@ -63,14 +63,16 @@ h2 {
 
 .guestbook-form {
   display: flex;
-  flex-direction: column;
-  gap: 15px;
+  flex-direction: row;
+  align-items: flex-end;
+  gap: 10px;
   flex-shrink: 0;
   margin-top: 20px;
 }
 
 .guestbook-form input,
 .guestbook-form textarea {
+  flex-grow: 1;
   font-size: 16px;
   padding: 12px 15px;
   background-color: #252525;
@@ -78,6 +80,9 @@ h2 {
   border-radius: 8px;
   color: #e0e0e0;
   transition: border-color 0.2s, box-shadow 0.2s;
+  min-height: 45px;
+  max-height: 150px;
+  resize: none;
 }
 
 .guestbook-form input:focus,
@@ -89,19 +94,23 @@ h2 {
 
 .guestbook-form textarea {
   min-height: 13px;
-  resize: vertical;
+  resize: none;
 }
 
 .guestbook-form button {
-  font-size: 16px;
-  font-weight: bold;
-  padding: 14px 20px;
+  flex-shrink: 0;
+  height: 63px;
+  border-radius: 15%;
+  font-size: 20px;
   background-color: #ab25d3; 
   color: #121212; 
   border: none;
-  border-radius: 8px;
   cursor: pointer;
   transition: background-color 0.2s, transform 0.1s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 12px 15px;
 }
 
 .guestbook-form button:hover {
@@ -196,7 +205,6 @@ h2 {
 
 .login-container {
   max-width: 450px;
-  /* (100px dari atas, auto kiri-kanan, 0 bawah) */
   margin: 100px auto 0 auto; 
   padding: 40px;
   background-color: #1e1e1e;
@@ -212,11 +220,10 @@ h2 {
   margin-bottom: 30px;
 }
 
-/* Tombol untuk ganti mode (register/login) */
 .toggle-auth {
   background: none;
   border: none;
-  color: #bb86fc; /* Warna ungu aksen */
+  color: #bb86fc; 
   cursor: pointer;
   width: 100%;
   text-align: center;
@@ -229,14 +236,73 @@ h2 {
 }
 
 .typing-indicator {
-  /* Beri sedikit ruang */
-  min-height: 1.5em; /* (sekitar tinggi 1 baris teks) */
-  margin-bottom: 15px; /* Jarak sebelum pemisah */
+  min-height: 1.5em; 
+  margin-bottom: 15px; 
   font-size: 0.9em;
   color: #888;
+  border-bottom: 1px solid #444 ;
 }
 
 .divider {
   border-bottom: 1px solid #444;
   margin-bottom: 20px;
+}
+
+.auth-form {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  flex-shrink: 0;
+  margin-top: 20px;
+}
+
+.auth-form input,
+.auth-form textarea {
+  flex-grow: 1;
+  font-size: 16px;
+  padding: 12px 15px;
+  background-color: #252525;
+  border: 1px solid #444;
+  border-radius: 8px;
+  color: #e0e0e0;
+  transition: border-color 0.2s, box-shadow 0.2s;
+  min-height: 45px;
+  max-height: 150px;
+  resize: none;
+}
+
+.auth-form input:focus,
+.auth-form textarea:focus {
+  outline: none;
+  border-color: #bb86fc; 
+  box-shadow: 0 0 0 3px rgba(187, 134, 252, 0.1);
+}
+
+.auth-form textarea {
+  min-height: 13px;
+  resize: none;
+}
+
+.auth-form button {
+  flex-shrink: 0;
+  height: 63px;
+  border-radius: 6px;
+  font-size: 20px;
+  background-color: #ab25d3; 
+  color: #121212; 
+  border: none;
+  cursor: pointer;
+  transition: background-color 0.2s, transform 0.1s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 12px 15px;
+}
+
+.auth-form button:hover {
+  background-color: #cb4bf3;
+}
+
+.auth-form button:active {
+  transform: scale(0.98);
 }
