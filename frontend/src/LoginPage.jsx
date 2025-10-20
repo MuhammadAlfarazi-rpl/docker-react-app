@@ -2,8 +2,7 @@ import { useState } from 'react';
 import { useAuth } from './AuthContext';
 import { useNavigate } from 'react-router-dom';
 import api from './api';
-
-import './App.css';
+import './App.css'; 
 
 function LoginPage() {
   const [username, setUsername] = useState('');
@@ -38,8 +37,9 @@ function LoginPage() {
   };
 
   return (
-    <div className="App" style={{ maxWidth: '400px' }}>
-      <h1>{isRegistering ? 'Register' : 'Login'} BuaChat</h1>
+    <div className="login-container"> 
+      <h1>{isRegistering ? 'Register BuaChat' : 'Login BuaChat'}</h1>
+      
       <form onSubmit={handleSubmit} className="guestbook-form">
         <input
           type="text"
@@ -55,12 +55,13 @@ function LoginPage() {
           onChange={(e) => setPassword(e.target.value)}
           required
         />
-        <button type="submit">{isRegistering ? 'Register' : 'Login'}</button>
+        <button typeS="submit">{isRegistering ? 'Register' : 'Login'}</button>
         {error && <p style={{ color: 'red', textAlign: 'center' }}>{error}</p>}
       </form>
+      
       <button 
         onClick={() => setIsRegistering(!isRegistering)}
-        style={{background: 'none', border: 'none', color: '#bb86fc', cursor: 'pointer', width: '100%', textAlign: 'center'}}
+        className="toggle-auth" 
       >
         {isRegistering ? 'Sudah punya akun? Login di sini' : 'Belum punya akun? Register di sini'}
       </button>

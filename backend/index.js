@@ -19,6 +19,8 @@ const io = new Server(server, {
   }
 });
 
+const onlineUsers = new Map();
+
 const JWT_SECRET = process.env.JWT_SECRET;
 
 const pool = new Pool({
@@ -31,9 +33,18 @@ const pool = new Pool({
 
 io.on('connection', (socket) => {
   console.log('⚡ User terhubung:', socket.id);
+  socket.on('user_joins', (username) => {
+    onlineUsers.set(socket.id, username);
+    console.log(username, 'bergabung. Total online:', onlineUsers.size);
+    io.emit('online_users_list', Array.from(onlineUsers.values()));
+  });
 
   socket.on('disconnect', () => {
     console.log('🔥 User terputus:', socket.id);
+    const username = onlineUsers.get(socket.id);
+    onlineUsers.delete(socket.id);
+    console.log(username, 'keluar. Sisa online:', onlineUsers.size);
+    io.emit('online_users_list', Array.from(onlineUsers.values()));
   });
 });
 
