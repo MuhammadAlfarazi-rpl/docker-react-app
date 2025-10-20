@@ -33,17 +33,23 @@ const pool = new Pool({
 
 io.on('connection', (socket) => {
   console.log('⚡ User terhubung:', socket.id);
+
+  socket.on('join_room', (roomName) => {
+    socket.join(roomName);
+    console.log(socket.id, "bergabung ke room:", roomName);
+  });
+
   socket.on('user_joins', (username) => {
     onlineUsers.set(socket.id, username);
     console.log(username, 'bergabung. Total online:', onlineUsers.size);
     io.emit('online_users_list', Array.from(onlineUsers.values()));
   });
 
-  socket.on('typing', (username) => {
+  socket.on('typing', (username, room) => {
     socket.broadcast.emit('user_typing', username);
   });
 
-  socket.on('stop_typing', (username) => {
+  socket.on('stop_typing', (username, room) => {
     socket.broadcast.emit('user_stopped_typing', username);
   });
 
@@ -123,9 +129,13 @@ app.post('/auth/login', async (req, res) => {
 
 // --- Rouute Pesan ---
 
-app.get('/messages', authenticateToken, async (req, res) => {
+app.get('/messages/:room', authenticateToken, async (req, res) => {
   try {
-    const result = await pool.query('SELECT * FROM messages ORDER BY createdAt DESC');
+    const { room } = req.params;
+    const result = await pool.query(
+      'SELECT * FROM messages WHERE room = $1 ORDER BY createdAt ASC',
+      [room]
+    );
     res.json(result.rows);
   } catch (err) {
     console.error(err);
@@ -135,22 +145,21 @@ app.get('/messages', authenticateToken, async (req, res) => {
 
 app.post('/messages', authenticateToken, async (req, res) => {
   try {
-    const { name, message } = req.body;
+    const { name, message, room } = req.body;
     const userId = req.user.userId;
 
-    if (!name || !message) {
-      return res.status(400).send('Name and message are required');
+    if (!name || !message || !room) {
+      return res.status(400).send('Name, message, and room are required');
     }
 
     const result = await pool.query(
-      'INSERT INTO messages (name, message, user_id) VALUES ($1, $2, $3) RETURNING *',
-      [name, message, userId]
+      'INSERT INTO messages (name, message, user_id, room) VALUES ($1, $2, $3, $4) RETURNING *',
+      [name, message, userId, room]
     );
 
-    const newMessage = result.rows[0]; 
-    io.emit('new_message', newMessage); 
-
-    res.status(201).json(newMessage); 
+    const newMessage = result.rows[0];
+    io.to(room).emit('new_message', newMessage); 
+    res.status(201).json(newMessage);
   } catch (err) {
     console.error(err);
     res.status(500).send('Server Error');

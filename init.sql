@@ -9,5 +9,6 @@ CREATE TABLE IF NOT EXISTS messages (
   name VARCHAR(100) NOT NULL,
   message TEXT NOT NULL,
   createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-  user_id INTEGER REFERENCES users(id) -- Tahu siapa yang posting
+  user_id INTEGER REFERENCES users(id),
+  room VARCHAR(100) DEFAULT 'general' NOT NULL
 );
