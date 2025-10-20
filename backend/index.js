@@ -39,12 +39,23 @@ io.on('connection', (socket) => {
     io.emit('online_users_list', Array.from(onlineUsers.values()));
   });
 
+  socket.on('typing', (username) => {
+    socket.broadcast.emit('user_typing', username);
+  });
+
+  socket.on('stop_typing', (username) => {
+    socket.broadcast.emit('user_stopped_typing', username);
+  });
+
   socket.on('disconnect', () => {
     console.log('🔥 User terputus:', socket.id);
     const username = onlineUsers.get(socket.id);
     onlineUsers.delete(socket.id);
     console.log(username, 'keluar. Sisa online:', onlineUsers.size);
     io.emit('online_users_list', Array.from(onlineUsers.values()));
+    if (username) {
+      socket.broadcast.emit('user_stopped_typing', username);
+    }
   });
 });
 

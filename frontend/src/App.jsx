@@ -1,4 +1,4 @@
-import { useState, useEffect} from 'react'; 
+import { useState, useEffect, useRef} from 'react'; 
 import api from './api';
 import './App.css';
 import { useAuth } from './AuthContext';
@@ -12,6 +12,8 @@ function App() {
   const [onlineUsers, setOnlineUsers] = useState([]);
   const auth = useAuth();
   const name = auth.username;
+  const [typingUsers, setTypingUsers] = useState([]);
+  const typingTimeoutRef = useRef(null);
 
   const fetchMessages = async () => {
     try {
@@ -38,9 +40,19 @@ function App() {
       messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
     });
 
+    socket.on('user_typing', (username) => {
+      setTypingUsers((prev) => [...new Set([...prev, username])]);
+    });
+
+    socket.on('user_stopped_typing', (username) => {
+      setTypingUsers((prev) => prev.filter((user) => user !== username));
+    });
+
     return () => {
       socket.off('new_message');
       socket.off('online_users_list'); 
+      socket.off('user_typing');
+      socket.off('user_stopped_typing');
     };
   }, []); 
 
@@ -51,6 +63,20 @@ function App() {
     }
   }, [auth.username]);
 
+  const handleTyping = (e) => {
+    const value = e.target.value;
+    setMessage(value);
+    socket.emit('typing', name);
+
+    if (typingTimeoutRef.current) {
+      clearTimeout(typingTimeoutRef.current);
+    }
+
+    typingTimeoutRef.current = setTimeout(() => {
+      socket.emit('stop_typing', name);
+    }, 2000); 
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!message.trim()) {
@@ -60,10 +86,16 @@ function App() {
     try {
       await api.post('/messages', { name, message });
       setMessage('');
+      if (typingTimeoutRef.current) {
+        clearTimeout(typingTimeoutRef.current);
+      }
+      socket.emit('stop_typing', name);
     } catch (error) {
       console.error('Error posting message:', error);
     }
   };
+
+  const otherTypingUsers = typingUsers.filter(user => user !== auth.username);
 
   return (
     <div className="App-container"> 
@@ -71,18 +103,6 @@ function App() {
         <div className="chat-header">
           <h1>BuaChat (Login sebagai: {auth.username})</h1>
         </div>
-        
-        <form onSubmit={handleSubmit} className="guestbook-form">
-          <textarea
-            placeholder="Ketik BuaChat kamu di sini..."
-            value={message}
-            onChange={(e) => setMessage(e.target.value)}
-            required
-          ></textarea>
-          <button type="submit">Kirim Pesan 🚀</button>
-        </form>
-
-        <h2>Obrolan:</h2>
         <div className="messages-list">
           {messages.map((msg) => (
             <div key={msg.id} className="message-item">
@@ -92,7 +112,19 @@ function App() {
             </div>
           ))}
         </div>
+
+        <form onSubmit={handleSubmit} className="guestbook-form">
+          <textarea
+            placeholder="Ketik BuaChat kamu di sini..."
+            value={message}
+            onChange={handleTyping}
+            required
+          ></textarea>
+          <button type="submit">Kirim Pesan 🚀</button>
+        </form>
       </div>
+
+      
 
       <div className="online-sidebar">
         <h2>Online ({onlineUsers.length})</h2>
