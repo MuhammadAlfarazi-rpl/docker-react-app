@@ -1,14 +1,24 @@
 const express = require('express');
 const cors = require('cors');
 const { Pool } = require('pg');
-const bcrypt = require('bcryptjs'); // Untuk hash password
-const jwt = require('jsonwebtoken'); // Untuk 'Member Card'
+const bcrypt = require('bcryptjs');
+const jwt = require('jsonwebtoken'); 
+
+const http = require('http'); 
+const { Server } = require('socket.io'); 
 
 const app = express();
 app.use(cors());
 app.use(express.json());
+const server = http.createServer(app); 
 
-// Ambil Kunci Rahasia dari environment
+const io = new Server(server, {
+  cors: {
+    origin: "http://localhost:5173", 
+    methods: ["GET", "POST"]
+  }
+});
+
 const JWT_SECRET = process.env.JWT_SECRET;
 
 const pool = new Pool({
@@ -19,24 +29,28 @@ const pool = new Pool({
   port: process.env.DB_PORT,
 });
 
-// --- FUNGSI SATPAM (Middleware) ---
-// Ini akan mengecek 'Member Card' (Token) di setiap permintaan
+io.on('connection', (socket) => {
+  console.log('⚡ User terhubung:', socket.id);
+
+  socket.on('disconnect', () => {
+    console.log('🔥 User terputus:', socket.id);
+  });
+});
+
 function authenticateToken(req, res, next) {
   const authHeader = req.headers['authorization'];
-  const token = authHeader && authHeader.split(' ')[1]; // Format: "Bearer <TOKEN>"
-
-  if (token == null) return res.sendStatus(401); // Tidak ada token
-
+  const token = authHeader && authHeader.split(' ')[1];
+  if (token == null) return res.sendStatus(401);
   jwt.verify(token, JWT_SECRET, (err, user) => {
-    if (err) return res.sendStatus(403); // Token tidak valid/kedaluwarsa
-    req.user = user; // Simpan info user (misal: { userId: 5 }) ke 'req'
-    next(); // Lanjutkan ke endpoint
+    if (err) return res.sendStatus(403);
+    req.user = user;
+    next();
   });
 }
 
-// --- Rute Autentikasi ---
+// --- Route intuk Autentikasi ---
 
-// 1. REGISTER (Membuat user baru)
+// 1. REGISTER
 app.post('/auth/register', async (req, res) => {
   try {
     const { username, password } = req.body;
@@ -44,7 +58,6 @@ app.post('/auth/register', async (req, res) => {
       return res.status(400).send('Username dan password dibutuhkan');
     }
 
-    // Enkripsi password
     const hashedPassword = await bcrypt.hash(password, 10);
 
     const result = await pool.query(
@@ -53,7 +66,6 @@ app.post('/auth/register', async (req, res) => {
     );
     res.status(201).json(result.rows[0]);
   } catch (err) {
-    // 23505 adalah kode error 'unique violation' (username sudah ada)
     if (err.code === '23505') {
       return res.status(400).send('Username sudah digunakan');
     }
@@ -62,12 +74,10 @@ app.post('/auth/register', async (req, res) => {
   }
 });
 
-// 2. LOGIN (Mendapatkan 'Member Card' / Token)
+// 2. LOGIN 
 app.post('/auth/login', async (req, res) => {
   try {
     const { username, password } = req.body;
-    
-    // Cari user
     const result = await pool.query('SELECT * FROM users WHERE username = $1', [username]);
     const user = result.rows[0];
 
@@ -75,14 +85,11 @@ app.post('/auth/login', async (req, res) => {
       return res.status(400).send('Username atau password salah');
     }
 
-    // Cek password
     const isMatch = await bcrypt.compare(password, user.password_hash);
     if (!isMatch) {
       return res.status(400).send('Username atau password salah');
     }
 
-    // Buat 'Member Card' (Token)
-    // Token ini berisi ID user dan berlaku 1 jam
     const token = jwt.sign({ userId: user.id }, JWT_SECRET, { expiresIn: '1h' });
 
     res.json({ token, username: user.username });
@@ -92,11 +99,9 @@ app.post('/auth/login', async (req, res) => {
   }
 });
 
-// --- Rute Pesan (Sekarang Dilindungi) ---
+// --- Rouute Pesan ---
 
-// HANYA user yang login (punya token valid) yang bisa lihat pesan
 app.get('/messages', authenticateToken, async (req, res) => {
-  // Kita pasang 'authenticateToken' di sini sebagai 'Satpam'
   try {
     const result = await pool.query('SELECT * FROM messages ORDER BY createdAt DESC');
     res.json(result.rows);
@@ -106,24 +111,24 @@ app.get('/messages', authenticateToken, async (req, res) => {
   }
 });
 
-// HANYA user yang login yang bisa kirim pesan
 app.post('/messages', authenticateToken, async (req, res) => {
-  // 'Satpam' cek token dulu
   try {
     const { name, message } = req.body;
-    
-    // Kita dapat 'userId' dari 'Satpam' (middleware)
-    const userId = req.user.userId; 
+    const userId = req.user.userId;
 
     if (!name || !message) {
       return res.status(400).send('Name and message are required');
     }
-    
+
     const result = await pool.query(
       'INSERT INTO messages (name, message, user_id) VALUES ($1, $2, $3) RETURNING *',
-      [name, message, userId] // Simpan siapa yang mengirim pesan
+      [name, message, userId]
     );
-    res.status(201).json(result.rows[0]);
+
+    const newMessage = result.rows[0]; 
+    io.emit('new_message', newMessage); 
+
+    res.status(201).json(newMessage); 
   } catch (err) {
     console.error(err);
     res.status(500).send('Server Error');
@@ -131,6 +136,6 @@ app.post('/messages', authenticateToken, async (req, res) => {
 });
 
 const PORT = process.env.PORT || 3001;
-app.listen(PORT, () => {
-  console.log(`Backend server (with auth) running on port ${PORT}`);
+server.listen(PORT, () => {
+  console.log(`BuaChat Server (with sockets) running on port ${PORT}`);
 });

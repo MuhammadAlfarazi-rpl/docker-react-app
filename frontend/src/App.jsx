@@ -1,13 +1,15 @@
-import { useState, useEffect } from 'react';
-import api from './api'; 
+import { useState, useEffect } from 'react'; 
+import api from './api';
 import './App.css';
-import { useAuth } from './AuthContext'; 
+import { useAuth } from './AuthContext';
+import { io } from 'socket.io-client'; 
+
+const socket = io('http://localhost:3001');
 
 function App() {
   const [messages, setMessages] = useState([]);
   const [message, setMessage] = useState('');
-  
-  const auth = useAuth(); 
+  const auth = useAuth();
   const name = auth.username;
 
   const fetchMessages = async () => {
@@ -24,7 +26,15 @@ function App() {
 
   useEffect(() => {
     fetchMessages();
-  }, []);
+
+    socket.on('new_message', (incomingMessage) => {
+      setMessages((prevMessages) => [incomingMessage, ...prevMessages]);
+    });
+
+    return () => {
+      socket.off('new_message');
+    };
+  }, []); 
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -35,7 +45,6 @@ function App() {
     try {
       await api.post('/messages', { name, message });
       setMessage('');
-      fetchMessages();
     } catch (error) {
       console.error('Error posting message:', error);
     }
@@ -44,13 +53,13 @@ function App() {
   return (
     <div className="App">
       <div style={{display: 'flex', justifyContent: 'space-between', alignItems: 'center'}}>
-        <h1>BuaCot (Login sebagai: {auth.username})</h1>
-        <button onClick={() => auth.logout()} className="logout">Logout</button>
+        <h1>BuaChat (Login sebagai: {auth.username})</h1>
+        <button onClick={() => auth.logout()} style={{height: 'fit-content'}}>Logout</button>
       </div>
-      
+
       <form onSubmit={handleSubmit} className="guestbook-form">
         <textarea
-          placeholder="Pesan Anda"
+          placeholder="Ketik BuaChat kamu di sini..."
           value={message}
           onChange={(e) => setMessage(e.target.value)}
           required
@@ -60,11 +69,11 @@ function App() {
 
       <hr />
 
-      <h2>Pesan:</h2>
+      <h2>Obrolan:</h2>
       <div className="messages-list">
         {messages.map((msg) => (
           <div key={msg.id} className="message-item">
-            <strong>{msg.name}</strong> 
+            <strong>{msg.name}</strong>
             <p>{msg.message}</p>
             <small>{new Date(msg.createdat).toLocaleString()}</small>
           </div>
