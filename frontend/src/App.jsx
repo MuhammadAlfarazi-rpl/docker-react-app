@@ -1,20 +1,24 @@
 import { useState, useEffect } from 'react';
-import axios from 'axios';
-import './App.css'; 
-
-const API_URL = 'http://localhost:3001';
+import api from './api'; 
+import './App.css';
+import { useAuth } from './AuthContext'; 
 
 function App() {
   const [messages, setMessages] = useState([]);
-  const [name, setName] = useState('');
   const [message, setMessage] = useState('');
+  
+  const auth = useAuth(); 
+  const name = auth.username;
 
   const fetchMessages = async () => {
     try {
-      const response = await axios.get(`${API_URL}/messages`);
+      const response = await api.get('/messages'); 
       setMessages(response.data);
     } catch (error) {
       console.error('Error fetching messages:', error);
+      if (error.response?.status === 401 || error.response?.status === 403) {
+        auth.logout();
+      }
     }
   };
 
@@ -24,15 +28,14 @@ function App() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!name.trim() || !message.trim()) {
-      alert("Nama dan Pesan tidak boleh kosong!");
+    if (!message.trim()) {
+      alert("Pesan tidak boleh kosong!");
       return;
     }
     try {
-      await axios.post(`${API_URL}/messages`, { name, message });
-      setName('');
+      await api.post('/messages', { name, message });
       setMessage('');
-      fetchMessages(); 
+      fetchMessages();
     } catch (error) {
       console.error('Error posting message:', error);
     }
@@ -40,16 +43,12 @@ function App() {
 
   return (
     <div className="App">
-      <h1>Guestbook Saja</h1>
+      <div style={{display: 'flex', justifyContent: 'space-between', alignItems: 'center'}}>
+        <h1>BuaCot (Login sebagai: {auth.username})</h1>
+        <button onClick={() => auth.logout()} className="logout">Logout</button>
+      </div>
       
       <form onSubmit={handleSubmit} className="guestbook-form">
-        <input
-          type="text"
-          placeholder="Nama Anda"
-          value={name}
-          onChange={(e) => setName(e.target.value)}
-          required
-        />
         <textarea
           placeholder="Pesan Anda"
           value={message}
@@ -62,11 +61,10 @@ function App() {
       <hr />
 
       <h2>Pesan:</h2>
-
       <div className="messages-list">
         {messages.map((msg) => (
           <div key={msg.id} className="message-item">
-            <strong>{msg.name}</strong>
+            <strong>{msg.name}</strong> 
             <p>{msg.message}</p>
             <small>{new Date(msg.createdat).toLocaleString()}</small>
           </div>

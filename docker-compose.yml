@@ -28,6 +28,7 @@ services:
       - DB_NAME=mydb
       - DB_PASSWORD=mypassword
       - DB_PORT=5432
+      - JWT_SECRET=bapakdiasaltobelakangseribukali
     depends_on:
       - db # Pastikan database jalan dulu sebelum backend
 

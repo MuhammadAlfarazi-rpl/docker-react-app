@@ -78,6 +78,18 @@ h2 {
   transform: scale(0.98);
 }
 
+.logout {
+  font-size: 10px;
+  font-weight: bold;
+  padding: 10px 10px;
+  background-color: #d12424; 
+  color: #121212; 
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: background-color 0.2s, transform 0.1s;
+}
+
 .messages-list {
   display: flex;
   flex-direction: column;

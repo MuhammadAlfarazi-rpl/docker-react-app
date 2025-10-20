@@ -1,9 +1,13 @@
+CREATE TABLE IF NOT EXISTS users (
+  id SERIAL PRIMARY KEY,
+  username VARCHAR(100) NOT NULL UNIQUE,
+  password_hash TEXT NOT NULL
+);
+
 CREATE TABLE IF NOT EXISTS messages (
   id SERIAL PRIMARY KEY,
   name VARCHAR(100) NOT NULL,
   message TEXT NOT NULL,
-  createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+  createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  user_id INTEGER REFERENCES users(id) -- Tahu siapa yang posting
 );
-
--- (Opsional) Tambahkan data dummy
-INSERT INTO messages (name, message) VALUES ('Admin', 'Selamat datang di Guestbook!');
