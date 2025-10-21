@@ -3,21 +3,34 @@ const cors = require('cors');
 const { Pool } = require('pg');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken'); 
-
 const http = require('http'); 
 const { Server } = require('socket.io'); 
+const multer = require('multer');
+const path = require('path');
 
 const app = express();
 app.use(cors());
 app.use(express.json());
+app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 const server = http.createServer(app); 
-
 const io = new Server(server, {
   cors: {
     origin: "http://localhost:5173", 
     methods: ["GET", "POST"]
   }
 });
+
+const storage = multer.diskStorage({
+  destination: function (req, file, cb) {
+    cb(null, 'uploads/'); 
+  },
+  filename: function (req, file, cb) {
+    const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
+    cb(null, uniqueSuffix + '-' + file.originalname);
+  }
+});
+
+const upload = multer({ storage: storage });
 
 const onlineUsers = new Map();
 
@@ -51,11 +64,11 @@ io.on('connection', (socket) => {
   });
 
   socket.on('typing', (username, room) => {
-    socket.broadcast.emit('user_typing', username);
+    socket.broadcast.to(room).emit('user_typing', username);
   });
 
   socket.on('stop_typing', (username, room) => {
-    socket.broadcast.emit('user_stopped_typing', username);
+    socket.broadcast.to(room).emit('user_stopped_typing', username);
   });
 
   socket.on('disconnect', () => {
@@ -148,20 +161,32 @@ app.get('/messages/:room', authenticateToken, async (req, res) => {
   }
 });
 
+app.post('/upload', authenticateToken, upload.single('file'), (req, res) => {
+  if (!req.file) {
+    return res.status(400).send('Tidak ada file yang di-upload.');
+  }
+
+  res.json({
+    filePath: `/uploads/${req.file.filename}`,
+    fileType: req.file.mimetype,
+    originalName: req.file.originalname
+  });
+});
+
 app.post('/messages', authenticateToken, async (req, res) => {
   try {
-    const { name, message, room } = req.body;
+    const { name, message, room, file_url, file_type } = req.body; 
     const userId = req.user.userId;
 
-    if (!name || !message || !room) {
-      return res.status(400).send('Name, message, and room are required');
+    if ((!message || !message.trim()) && !file_url) {
+      return res.status(400).send('Pesan atau file dibutuhkan');
     }
-
+    
     const result = await pool.query(
-      'INSERT INTO messages (name, message, user_id, room) VALUES ($1, $2, $3, $4) RETURNING *',
-      [name, message, userId, room]
+      'INSERT INTO messages (name, message, user_id, room, file_url, file_type) VALUES ($1, $2, $3, $4, $5, $6) RETURNING *',
+      [name, message || null, userId, room, file_url || null, file_type || null]
     );
-
+    
     const newMessage = result.rows[0];
     io.to(room).emit('new_message', newMessage); 
     res.status(201).json(newMessage);

@@ -21,7 +21,8 @@ services:
     ports:
       - "3001:3001" # Map port 3001 di host ke 3001 di container
     volumes:
-      - ./backend:/usr/src/app 
+      - ./backend:/usr/src/app
+      - /usr/src/app/node_modules
     environment:
       - DB_USER=myuser
       - DB_HOST=db # PENTING: 'db' adalah nama service database di bawah
