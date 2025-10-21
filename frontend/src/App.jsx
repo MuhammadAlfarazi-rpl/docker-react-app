@@ -19,9 +19,10 @@ function App() {
   const [typingUsers, setTypingUsers] = useState([]);
   const typingTimeoutRef = useRef(null);
   const messagesEndRef = useRef(null);
-  const [showPicker, setShowPicker] = useState(false);
   const fileInputRef = useRef(null);
   const [isUploading, setIsUploading] = useState(false);
+  const [editingMessage, setEditingMessage] = useState(null); 
+  const [editText, setEditText] = useState('');
   
   const handleFileChange = async (e) => {
     const file = e.target.files[0];
@@ -100,16 +101,34 @@ function App() {
     setTypingUsers((prev) => prev.filter((user) => user !== username));
   };
 
+  const handleMessageDeleted = ({ messageId, room }) => {
+      if (room === currentRoom) {
+        setMessages((prev) => prev.filter((msg) => msg.id !== messageId));
+      }
+    };
+
+  const handleMessageUpdated = (updatedMessage) => {
+      if (updatedMessage.room === currentRoom) {
+        setMessages((prev) => 
+          prev.map((msg) => (msg.id === updatedMessage.id ? updatedMessage : msg))
+        );
+      }
+    };
+
   socket.on('new_message', handleNewMessage);
   socket.on('online_users_list', handleOnlineUsers);
   socket.on('user_typing', handleUserTyping);
   socket.on('user_stopped_typing', handleUserStoppedTyping);
+  socket.on('message_deleted', handleMessageDeleted);
+  socket.on('message_updated', handleMessageUpdated);
 
     return () => {
     socket.off('new_message', handleNewMessage);
     socket.off('online_users_list', handleOnlineUsers); 
     socket.off('user_typing', handleUserTyping);
     socket.off('user_stopped_typing', handleUserStoppedTyping);
+    socket.off('message_deleted', handleMessageDeleted);
+    socket.off('message_updated', handleMessageUpdated);
     socket.emit('leave_room', currentRoom);
   };
 }, [currentRoom]);
@@ -166,6 +185,42 @@ function App() {
     }
   };
 
+  const handleDeleteMessage = async (messageId) => {
+    if (window.confirm('Yakin mau hapus pesan ini?')) {
+      try {
+        await api.delete(`/messages/${messageId}`);
+      } catch (error) {
+        console.error('Error deleting message:', error);
+        alert('Gagal menghapus pesan.');
+      }
+    }
+  };
+
+  const startEditMessage = (message) => {
+    setEditingMessage(message.id);
+    setEditText(message.message);
+  };
+
+  const handleUpdateMessage = async (e) => {
+    e.preventDefault();
+    if (!editText.trim()) return;
+
+    try {
+      await api.put(`/messages/${editingMessage}`, { newMessageText: editText });
+      // Reset state edit
+      setEditingMessage(null);
+      setEditText('');
+    } catch (error) {
+      console.error('Error updating message:', error);
+      alert('Gagal mengedit pesan.');
+    }
+  };
+
+  const cancelEditMessage = () => {
+    setEditingMessage(null);
+    setEditText('');
+  };
+
   const otherTypingUsers = typingUsers.filter(user => user !== auth.username);
 
   return (
@@ -178,6 +233,21 @@ function App() {
         <div className="messages-list">
           {messages.map((msg) => (
             <div key={msg.id} className="message-item">
+              {editingMessage === msg.id ? (
+                <form onSubmit={handleUpdateMessage} className="edit-form">
+                  <textarea 
+                    value={editText}
+                    onChange={(e) => setEditText(e.target.value)}
+                    required
+                    autoFocus
+                  />
+                  <div className="edit-buttons">
+                    <button type="submit" className="save-button">Simpan</button>
+                    <button type="button" onClick={cancelEditMessage} className="cancel-button">Batal</button>
+                  </div>
+                </form>
+              ) : (
+                <>
               <strong>{msg.name}</strong>
               {msg.file_url ? (
                 <div className="file-message">
@@ -202,6 +272,17 @@ function App() {
                 <p>{msg.message}</p>
               )}
               <small>{new Date(msg.createdat).toLocaleString()}</small>
+              {console.log(`Pesan ID ${msg.id}: msg.user_id=${msg.user_id} (${typeof msg.user_id}), auth.userId=${auth.userId} (${typeof auth.userId}), Match? ${msg.user_id === auth.userId}`)}
+              {msg.user_id === auth.userId && (
+                    <div className="message-actions">
+                      {!msg.file_url && (
+                        <button onClick={() => startEditMessage(msg)} className="edit-btn">✏️</button>
+                      )}
+                      <button onClick={() => handleDeleteMessage(msg.id)} className="delete-btn">🗑️</button>
+                    </div>
+                  )}
+                </>
+              )}
             </div>
           ))}
           <div ref={messagesEndRef} />

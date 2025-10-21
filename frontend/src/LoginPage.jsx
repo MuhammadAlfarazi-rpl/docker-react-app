@@ -27,8 +27,8 @@ function LoginPage() {
         setIsRegistering(false); 
       } else {
         const response = await api.post(endpoint, payload);
-        const { token, username } = response.data;
-        auth.login(token, username); 
+        const { token, username, userId } = response.data;
+        auth.login(token, username, userId); 
         navigate('/'); 
       }
     } catch (err) {

@@ -137,6 +137,7 @@ app.post('/auth/login', async (req, res) => {
     }
 
     const token = jwt.sign({ userId: user.id }, JWT_SECRET, { expiresIn: '1h' });
+    res.json({ token, username: user.username, userId: user.id });
 
     res.json({ token, username: user.username });
   } catch (err) {
@@ -192,6 +193,69 @@ app.post('/messages', authenticateToken, async (req, res) => {
     res.status(201).json(newMessage);
   } catch (err) {
     console.error(err);
+    res.status(500).send('Server Error');
+  }
+});
+
+app.delete('/messages/:id', authenticateToken, async (req, res) => {
+  try {
+    const messageId = parseInt(req.params.id); 
+    const userId = req.user.userId;
+    const msgQuery = await pool.query('SELECT user_id, room FROM messages WHERE id = $1', [messageId]);
+    const messageData = msgQuery.rows[0];
+
+    if (!messageData) {
+      return res.status(404).send('Pesan tidak ditemukan');
+    }
+
+    if (messageData.user_id !== userId) {
+      return res.status(403).send('Anda tidak punya izin menghapus pesan ini');
+    }
+
+    await pool.query('DELETE FROM messages WHERE id = $1', [messageId]);
+
+    io.to(messageData.room).emit('message_deleted', { messageId: messageId, room: messageData.room });
+
+    res.sendStatus(204); 
+  } catch (err) {
+    console.error('Error deleting message:', err);
+    res.status(500).send('Server Error');
+  }
+});
+
+app.put('/messages/:id', authenticateToken, async (req, res) => {
+  try {
+    const messageId = parseInt(req.params.id);
+    const userId = req.user.userId;
+    const { newMessageText } = req.body; 
+
+    if (!newMessageText || !newMessageText.trim()) {
+      return res.status(400).send('Teks pesan baru tidak boleh kosong');
+    }
+
+    const msgQuery = await pool.query('SELECT user_id, room FROM messages WHERE id = $1', [messageId]);
+    const messageData = msgQuery.rows[0];
+
+    if (!messageData) {
+      return res.status(404).send('Pesan tidak ditemukan');
+    }
+
+    if (messageData.user_id !== userId) {
+      return res.status(403).send('Anda tidak punya izin mengedit pesan ini');
+    }
+
+    const updateResult = await pool.query(
+      'UPDATE messages SET message = $1 WHERE id = $2 RETURNING *',
+      [newMessageText, messageId]
+    );
+
+    const updatedMessage = updateResult.rows[0];
+
+    io.to(messageData.room).emit('message_updated', updatedMessage);
+
+    res.json(updatedMessage); 
+  } catch (err) {
+    console.error('Error updating message:', err);
     res.status(500).send('Server Error');
   }
 });

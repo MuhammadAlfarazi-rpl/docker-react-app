@@ -6,22 +6,27 @@ const AuthContext = createContext();
 export function AuthProvider({ children }) {
   const [token, setToken] = useState(localStorage.getItem('token'));
   const [username, setUsername] = useState(localStorage.getItem('username'));
+  const [userId, setUserId] = useState(parseInt(localStorage.getItem('userId')) || null);
 
   useEffect(() => {
     if (token) {
       localStorage.setItem('token', token);
       localStorage.setItem('username', username);
+      localStorage.setItem('userId', userId);
       api.defaults.headers.common['Authorization'] = `Bearer ${token}`;
     } else {
       localStorage.removeItem('token');
       localStorage.removeItem('username');
+      localStorage.removeItem('userId'); 
+      setUserId(null);
       delete api.defaults.headers.common['Authorization'];
     }
   }, [token, username]);
 
-  const login = (newToken, newUsername) => {
+  const login = (newToken, newUsername, newUserId) => {
     setToken(newToken);
     setUsername(newUsername);
+    setUserId(newUserId);
   };
 
   const logout = () => {
@@ -30,7 +35,7 @@ export function AuthProvider({ children }) {
   };
 
   return (
-    <AuthContext.Provider value={{ token, username, login, logout }}>
+    <AuthContext.Provider value={{ token, username, userId, login, logout }}>
       {children}
     </AuthContext.Provider>
   );

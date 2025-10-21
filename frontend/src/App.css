@@ -149,6 +149,8 @@ h2 {
   border-radius: 8px;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
   word-wrap: break-word;
+  position: relative; 
+  padding-bottom: 30px;
 }
 
 .message-item strong {
@@ -411,4 +413,91 @@ h2 {
 
 .file-download-link:hover {
   background-color: #4a4a4a;
+}
+
+.message-actions {
+  position: absolute; /* Melayang di sudut kanan bawah */
+  bottom: 5px;
+  right: 10px;
+  display: flex;
+  gap: 5px;
+  opacity: 0; /* Sembunyikan by default */
+  transition: opacity 0.2s;
+}
+
+/* 3. Tampilkan tombol saat message item di-hover */
+.message-item:hover .message-actions {
+  opacity: 1;
+}
+
+/* 4. Style untuk tombol Edit (✏️) & Hapus (🗑️) */
+.message-actions button {
+  background: none;
+  border: none;
+  font-size: 16px;
+  cursor: pointer;
+  padding: 3px;
+  color: #888;
+}
+.message-actions button:hover {
+  color: #fff;
+}
+.delete-btn:hover {
+  color: #ff4d4d; /* Merah saat hover hapus */
+}
+
+/* 5. Style untuk form saat mode edit */
+.edit-form {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.edit-form textarea {
+  font-size: 1em; /* Cocokkan dgn font pesan biasa */
+  padding: 8px 10px;
+  background-color: #3a3a3a; /* Sedikit beda */
+  border: 1px solid #555;
+  border-radius: 6px;
+  color: #e0e0e0;
+  min-height: 50px;
+  resize: vertical;
+}
+.edit-form textarea:focus {
+  outline: none;
+  border-color: #bb86fc;
+  box-shadow: 0 0 0 2px rgba(187, 134, 252, 0.1);
+}
+
+/* 6. Kontainer tombol Simpan & Batal */
+.edit-buttons {
+  display: flex;
+  justify-content: flex-end; /* Taruh tombol di kanan */
+  gap: 10px;
+}
+.edit-buttons button {
+  font-size: 0.9em;
+  padding: 6px 12px;
+  border-radius: 6px;
+  cursor: pointer;
+  border: none;
+  font-weight: bold;
+}
+.save-button {
+  background-color: #bb86fc;
+  color: #121212;
+}
+.save-button:hover {
+  background-color: #a06bf9;
+}
+.cancel-button {
+  background-color: #555;
+  color: #fff;
+}
+.cancel-button:hover {
+  background-color: #777;
+}
+
+/* 7. (Opsional) Bikin pesan sendiri sedikit beda */
+.my-message {
+  background-color: #a992b4; 
 }
