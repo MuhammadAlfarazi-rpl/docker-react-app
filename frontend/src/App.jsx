@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef} from 'react'; 
 import api from './api';
+import EmojiPicker from 'emoji-picker-react';
 import './App.css';
 import { useAuth } from './AuthContext';
 import { io } from 'socket.io-client'; 
@@ -18,6 +19,14 @@ function App() {
   const [typingUsers, setTypingUsers] = useState([]);
   const typingTimeoutRef = useRef(null);
   const messagesEndRef = useRef(null);
+  const [showPicker, setShowPicker] = useState(false);
+
+  const onEmojiClick = (emojiObject) => {
+    // Tambahkan emoji ke pesan yang ada
+    setMessage((prevMessage) => prevMessage + emojiObject.emoji);
+    // Tutup picker setelah dipilih
+    setShowPicker(false);
+  };
 
   const smoothScrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -40,33 +49,39 @@ function App() {
   };
 
   useEffect(() => {
-    fetchMessages('general');
-    socket.emit('join_room', 'general');
+    fetchMessages(currentRoom);
+    socket.emit('join_room', currentRoom);
 
-    socket.on('new_message', (incomingMessage) => {
-      setMessages((prevMessages) => [...prevMessages, incomingMessage]);
-    });
+    const handleNewMessage = (incomingMessage) => {
+    setMessages((prevMessages) => [...prevMessages, incomingMessage]);
+    setTimeout(smoothScrollToBottom, 0);
+  };
 
-    socket.on('online_users_list', (users) => {
-      const uniqueUsers = [...new Set(users)];
-      setOnlineUsers(uniqueUsers);
-    });
+  const handleOnlineUsers = (users) => {
+    setOnlineUsers([...new Set(users)]);
+  };
 
-    socket.on('user_typing', (username) => {
-      setTypingUsers((prev) => [...new Set([...prev, username])]);
-    });
+  const handleUserTyping = (username) => {
+    setTypingUsers((prev) => [...new Set([...prev, username])]);
+  };
 
-    socket.on('user_stopped_typing', (username) => {
-      setTypingUsers((prev) => prev.filter((user) => user !== username));
-    });
+  const handleUserStoppedTyping = (username) => {
+    setTypingUsers((prev) => prev.filter((user) => user !== username));
+  };
+
+  socket.on('new_message', handleNewMessage);
+  socket.on('online_users_list', handleOnlineUsers);
+  socket.on('user_typing', handleUserTyping);
+  socket.on('user_stopped_typing', handleUserStoppedTyping);
 
     return () => {
-      socket.off('new_message');
-      socket.off('online_users_list'); 
-      socket.off('user_typing');
-      socket.off('user_stopped_typing');
-    };
-  }, []); 
+    socket.off('new_message', handleNewMessage);
+    socket.off('online_users_list', handleOnlineUsers); 
+    socket.off('user_typing', handleUserTyping);
+    socket.off('user_stopped_typing', handleUserStoppedTyping);
+    socket.emit('leave_room', currentRoom);
+  };
+}, [currentRoom]);
 
   useEffect(() => {
     if (auth.username) {
@@ -87,14 +102,12 @@ function App() {
 }, [messages]);
 
   const handleRoomChange = (newRoom) => {
-    if (newRoom !== currentRoom) {
-      setMessages([]); 
-      setCurrentRoom(newRoom); 
-      setIsRoomChanging(true);
-      socket.emit('join_room', newRoom); 
-      fetchMessages(newRoom); 
-    }
-  };
+  if (newRoom !== currentRoom) {
+    setMessages([]); 
+    setIsRoomChanging(true); 
+    setCurrentRoom(newRoom);
+  }
+};
 
   const handleTyping = (e) => {
     const value = e.target.value;

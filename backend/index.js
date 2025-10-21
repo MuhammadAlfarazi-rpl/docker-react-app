@@ -39,6 +39,11 @@ io.on('connection', (socket) => {
     console.log(socket.id, "bergabung ke room:", roomName);
   });
 
+  socket.on('leave_room', (roomName) => {
+      socket.leave(roomName);
+      console.log(socket.id, "keluar dari room:", roomName);
+    });
+
   socket.on('user_joins', (username) => {
     onlineUsers.set(socket.id, username);
     console.log(username, 'bergabung. Total online:', onlineUsers.size);
