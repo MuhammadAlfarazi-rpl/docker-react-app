@@ -1,7 +1,8 @@
 CREATE TABLE IF NOT EXISTS users (
   id SERIAL PRIMARY KEY,
   username VARCHAR(100) NOT NULL UNIQUE,
-  password_hash TEXT NOT NULL
+  password_hash TEXT NOT NULL,
+  avatar_url TEXT DEFAULT '/uploads/default-avatar.png'
 );
 
 CREATE TABLE IF NOT EXISTS messages (

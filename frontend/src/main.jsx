@@ -5,13 +5,15 @@ import { AuthProvider } from './AuthContext';
 import App from './App.jsx';
 import LoginPage from './LoginPage.jsx';
 import ProtectedRoute from './ProtectedRoute.jsx';
+import ProfilePage from './ProfilePage.jsx';
 
 const router = createBrowserRouter([
   {
     path: '/',
     element: <ProtectedRoute />, 
     children: [
-      { path: '/', element: <App /> } 
+      { path: '/', element: <App /> },
+      { path: '/profile', element: <ProfilePage /> }
     ]
   },
   {

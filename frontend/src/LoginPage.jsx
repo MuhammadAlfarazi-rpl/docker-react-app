@@ -23,6 +23,9 @@ function LoginPage() {
     try {
       if (isRegistering) {
         await api.post(endpoint, payload);
+        const { token, username, userId, avatarUrl } = response.data;
+        auth.login(token, username, userId, avatarUrl);
+        navigate('/');
         alert('Registrasi sukses! Silakan login.');
         setIsRegistering(false); 
       } else {

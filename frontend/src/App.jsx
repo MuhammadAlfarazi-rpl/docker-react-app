@@ -1,9 +1,9 @@
 import { useState, useEffect, useRef} from 'react'; 
 import api from './api';
-import EmojiPicker from 'emoji-picker-react';
 import './App.css';
 import { useAuth } from './AuthContext';
-import { io } from 'socket.io-client'; 
+import { io } from 'socket.io-client';
+import { Link } from 'react-router-dom';
 
 const socket = io('http://localhost:3001');
 
@@ -233,6 +233,12 @@ function App() {
         <div className="messages-list">
           {messages.map((msg) => (
             <div key={msg.id} className="message-item">
+              <img 
+                src={`http://localhost:3001${msg.avatar_url || '/public/uploads/default-avatar.png'}`} 
+                alt={msg.name} 
+                className="chat-avatar" 
+              />
+              <div className="message-content">
               {editingMessage === msg.id ? (
                 <form onSubmit={handleUpdateMessage} className="edit-form">
                   <textarea 
@@ -283,6 +289,7 @@ function App() {
                   )}
                 </>
               )}
+              </div>
             </div>
           ))}
           <div ref={messagesEndRef} />
@@ -340,6 +347,11 @@ function App() {
         <ul className="online-list">
           {onlineUsers.map((user) => (
             <li key={user} className="online-user-item">
+              <img 
+                src={`http://localhost:3001${user.avatarUrl || '/public/uploads/default-avatar.png'}`} 
+                alt={user.username} 
+                className="sidebar-avatar" 
+              />
               <span className="online-indicator"></span> {user}
             </li>
           ))}

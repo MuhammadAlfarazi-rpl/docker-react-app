@@ -12,6 +12,7 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
+app.use('/public', express.static(path.join(__dirname, 'public')));
 const server = http.createServer(app); 
 const io = new Server(server, {
   cors: {
@@ -137,9 +138,7 @@ app.post('/auth/login', async (req, res) => {
     }
 
     const token = jwt.sign({ userId: user.id }, JWT_SECRET, { expiresIn: '1h' });
-    res.json({ token, username: user.username, userId: user.id });
-
-    res.json({ token, username: user.username });
+    res.json({ token, username: user.username, userId: user.id, avatarUrl: user.avatar_url });
   } catch (err) {
     console.error(err);
     res.status(500).send('Server Error');
@@ -257,6 +256,23 @@ app.put('/messages/:id', authenticateToken, async (req, res) => {
   } catch (err) {
     console.error('Error updating message:', err);
     res.status(500).send('Server Error');
+  }
+});
+
+app.post('/profile/avatar', authenticateToken, upload.single('avatar'), async (req, res) => {
+  if (!req.file) {
+    return res.status(400).send('Tidak ada file avatar.');
+  }
+
+  const userId = req.user.userId;
+  const avatarPath = `/uploads/${req.file.filename}`; 
+
+  try {
+    await pool.query('UPDATE users SET avatar_url = $1 WHERE id = $2', [avatarPath, userId]);
+    res.json({ avatarUrl: avatarPath });
+  } catch (err) {
+    console.error('Error updating avatar:', err);
+    res.status(500).send('Gagal update avatar.');
   }
 });
 

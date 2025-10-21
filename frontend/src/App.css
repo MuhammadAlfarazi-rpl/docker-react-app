@@ -151,6 +151,8 @@ h2 {
   word-wrap: break-word;
   position: relative; 
   padding-bottom: 30px;
+  display: flex;
+  align-items: flex-start;
 }
 
 .message-item strong {
@@ -159,11 +161,12 @@ h2 {
 }
 
 .message-item p {
-  margin: 10px 0 15px 0;
+  margin: 5px 0 7px 0;
   line-height: 1.6;
 }
 
 .message-item small {
+  display: block;
   font-style: italic;
   color: #888;
 }
@@ -416,21 +419,19 @@ h2 {
 }
 
 .message-actions {
-  position: absolute; /* Melayang di sudut kanan bawah */
+  position: absolute;
   bottom: 5px;
   right: 10px;
   display: flex;
   gap: 5px;
-  opacity: 0; /* Sembunyikan by default */
+  opacity: 0;
   transition: opacity 0.2s;
 }
 
-/* 3. Tampilkan tombol saat message item di-hover */
 .message-item:hover .message-actions {
   opacity: 1;
 }
 
-/* 4. Style untuk tombol Edit (✏️) & Hapus (🗑️) */
 .message-actions button {
   background: none;
   border: none;
@@ -443,19 +444,18 @@ h2 {
   color: #fff;
 }
 .delete-btn:hover {
-  color: #ff4d4d; /* Merah saat hover hapus */
+  color: #ff4d4d;
 }
 
-/* 5. Style untuk form saat mode edit */
 .edit-form {
   display: flex;
   flex-direction: column;
   gap: 10px;
 }
 .edit-form textarea {
-  font-size: 1em; /* Cocokkan dgn font pesan biasa */
+  font-size: 1em;
   padding: 8px 10px;
-  background-color: #3a3a3a; /* Sedikit beda */
+  background-color: #3a3a3a;
   border: 1px solid #555;
   border-radius: 6px;
   color: #e0e0e0;
@@ -468,10 +468,9 @@ h2 {
   box-shadow: 0 0 0 2px rgba(187, 134, 252, 0.1);
 }
 
-/* 6. Kontainer tombol Simpan & Batal */
 .edit-buttons {
   display: flex;
-  justify-content: flex-end; /* Taruh tombol di kanan */
+  justify-content: flex-end;
   gap: 10px;
 }
 .edit-buttons button {
@@ -497,7 +496,49 @@ h2 {
   background-color: #777;
 }
 
-/* 7. (Opsional) Bikin pesan sendiri sedikit beda */
 .my-message {
   background-color: #a992b4; 
+}
+
+.profile-avatar {
+  width: 150px;
+  height: 150px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 3px solid #444;
+  margin-bottom: 20px;
+}
+
+.chat-avatar {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  object-fit: cover;
+  margin-right: 15px;
+  flex-shrink: 0;
+}
+
+.sidebar-avatar {
+  width: 25px;
+  height: 25px;
+  border-radius: 50%;
+  object-fit: cover;
+  margin-right: 10px;
+}
+
+.message-content {
+   flex-grow: 1; 
+   display: flex;
+   flex-direction: column;
+}
+
+.message-content strong {
+  margin-right: 8px;
+}
+
+.message-content small {
+  display: inline-block;
+  margin-top: 0;
+  color: #a0a0a0;
+  font-size: 0.8em;
 }
