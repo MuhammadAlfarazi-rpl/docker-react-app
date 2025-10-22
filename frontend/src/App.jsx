@@ -135,8 +135,14 @@ function App() {
 
   useEffect(() => {
     if (auth.username) {
-      console.log('Mengirim absen sebagai:', auth.username);
-      socket.emit('user_joins', auth.username);
+      const dataToSend = {
+        username: auth.username,
+        avatarUrl: auth.avatarUrl || '/public/uploads/default-avatar.png' 
+      };
+      console.log('FRONTEND: Mencoba mengirim user_joins:', dataToSend);
+      socket.emit('user_joins', dataToSend);
+    } else {
+       console.log('FRONTEND: user_joins TIDAK dikirim. Username belum ada.');
     }
   }, [auth.username]);
 
@@ -345,16 +351,16 @@ function App() {
         </div>
         <h2>Online ({onlineUsers.length})</h2>
         <ul className="online-list">
-  {onlineUsers.map((user) => (
-    <li key={user.username} className="online-user-item">
-      {user.username === auth.username ? (
-        <Link to="/profile" className="profile-link"> 
+        {onlineUsers.map((user) => (
+          <li key={user.username} className="online-user-item">
+            {user.username === auth.username ? (
+          <Link to="/profile" className="profile-link"> 
           <img 
             src={`http://localhost:3001${user.avatarUrl || '/public/uploads/default-avatar.png'}`} 
             alt={user.username} 
             className="sidebar-avatar" 
           />
-          <span className="online-indicator"></span> {user.username} (Anda)
+          <span className="online-indicator"></span> {user.username} (You)
         </Link>
       ) : (
         <>
@@ -363,7 +369,7 @@ function App() {
             alt={user.username} 
             className="sidebar-avatar" 
           />
-          <span className="online-indicator"></span> {user}
+          <span className="online-indicator"></span> {user.username}
         </>
       )}
     </li>

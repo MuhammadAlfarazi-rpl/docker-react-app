@@ -58,11 +58,19 @@ io.on('connection', (socket) => {
       console.log(socket.id, "keluar dari room:", roomName);
     });
 
-  socket.on('user_joins', (username) => {
-    onlineUsers.set(socket.id, username);
-    console.log(username, 'bergabung. Total online:', onlineUsers.size);
-    io.emit('online_users_list', Array.from(onlineUsers.values()));
-  });
+  socket.on('user_joins', (userData) => {
+    console.log('BACKEND: Menerima user_joins:', userData);
+  if (userData && userData.username) { 
+    onlineUsers.set(socket.id, { 
+      username: userData.username, 
+      avatarUrl: userData.avatarUrl 
+    }); 
+    console.log(userData.username, 'bergabung. Total online:', onlineUsers.size);
+    io.emit('online_users_list', Array.from(onlineUsers.values())); 
+  } else {
+    console.error("Data user_joins tidak valid:", userData);
+  }
+});
 
   socket.on('typing', (username, room) => {
     socket.broadcast.to(room).emit('user_typing', username);
@@ -74,12 +82,13 @@ io.on('connection', (socket) => {
 
   socket.on('disconnect', () => {
     console.log('🔥 User terputus:', socket.id);
-    const username = onlineUsers.get(socket.id);
-    onlineUsers.delete(socket.id);
-    console.log(username, 'keluar. Sisa online:', onlineUsers.size);
-    io.emit('online_users_list', Array.from(onlineUsers.values()));
-    if (username) {
-      socket.broadcast.emit('user_stopped_typing', username);
+     userData = onlineUsers.get(socket.id);
+
+    if (userData) {
+      onlineUsers.delete(socket.id);
+      console.log(userData.username, 'keluar. Sisa online:', onlineUsers.size);
+      io.emit('online_users_list', Array.from(onlineUsers.values())); 
+      socket.broadcast.emit('user_stopped_typing', userData.username);
     }
   });
 });

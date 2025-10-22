@@ -200,6 +200,14 @@ h2 {
   font-size: 1.1em;
 }
 
+.profile-link {
+  display: flex;
+  align-items: center;
+  padding: 8px 0;
+  font-size: 1em;
+  color: #dadada;
+}
+
 .online-indicator {
   display: inline-block;
   width: 10px;
