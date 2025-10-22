@@ -226,10 +226,10 @@ function App() {
   return (
     <div className="App-container"> 
       <div className="chat-main">
-        <h2>Obrolan: #{currentRoom}</h2>
         <div className="chat-header">
           <h1>BuaChat (Login sebagai: {auth.username})</h1>
         </div>
+        <h2>Obrolan: #{currentRoom}</h2>
         <div className="messages-list">
           {messages.map((msg) => (
             <div key={msg.id} className="message-item">
@@ -345,17 +345,30 @@ function App() {
         </div>
         <h2>Online ({onlineUsers.length})</h2>
         <ul className="online-list">
-          {onlineUsers.map((user) => (
-            <li key={user} className="online-user-item">
-              <img 
-                src={`http://localhost:3001${user.avatarUrl || '/public/uploads/default-avatar.png'}`} 
-                alt={user.username} 
-                className="sidebar-avatar" 
-              />
-              <span className="online-indicator"></span> {user}
-            </li>
-          ))}
-        </ul>
+  {onlineUsers.map((user) => (
+    <li key={user.username} className="online-user-item">
+      {user.username === auth.username ? (
+        <Link to="/profile" className="profile-link"> 
+          <img 
+            src={`http://localhost:3001${user.avatarUrl || '/public/uploads/default-avatar.png'}`} 
+            alt={user.username} 
+            className="sidebar-avatar" 
+          />
+          <span className="online-indicator"></span> {user.username} (Anda)
+        </Link>
+      ) : (
+        <>
+          <img 
+            src={`http://localhost:3001${user.avatarUrl || '/public/uploads/default-avatar.png'}`} 
+            alt={user.username} 
+            className="sidebar-avatar" 
+          />
+          <span className="online-indicator"></span> {user}
+        </>
+      )}
+    </li>
+  ))}
+</ul>
         <div className="typing-indicator">
           {otherTypingUsers.length > 0 && (
             <i>

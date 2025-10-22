@@ -22,16 +22,19 @@ function LoginPage() {
 
     try {
       if (isRegistering) {
-        await api.post(endpoint, payload);
-        const { token, username, userId, avatarUrl } = response.data;
-        auth.login(token, username, userId, avatarUrl);
-        navigate('/');
-        alert('Registrasi sukses! Silakan login.');
+        const response = await api.post(endpoint, payload); 
+        console.log('Register response:', response.data);
+
+        alert('Registrasi sukses! Silakan login.'); 
+        
         setIsRegistering(false); 
+        setUsername('');
+        setPassword('');
+
       } else {
         const response = await api.post(endpoint, payload);
-        const { token, username, userId } = response.data;
-        auth.login(token, username, userId); 
+        const { token, username, userId, avatarUrl } = response.data; 
+        auth.login(token, username, userId, avatarUrl);
         navigate('/'); 
       }
     } catch (err) {
@@ -58,7 +61,7 @@ function LoginPage() {
           onChange={(e) => setPassword(e.target.value)}
           required
         />
-        <button typeS="submit">{isRegistering ? 'Register' : 'Login'}</button>
+        <button type="submit">{isRegistering ? 'Register' : 'Login'}</button>
         {error && <p style={{ color: 'red', textAlign: 'center' }}>{error}</p>}
       </form>
 
